@@ -3,10 +3,8 @@ package com.example.wordle.service;
 import com.example.wordle.dto.CreatePartidaDTO;
 import com.example.wordle.error.JuegoNotFoundException;
 import com.example.wordle.error.JugadorNotFoundException;
-import com.example.wordle.modelo.Dificultad;
-import com.example.wordle.modelo.Juego;
-import com.example.wordle.modelo.Jugador;
-import com.example.wordle.modelo.Partida;
+import com.example.wordle.modelo.*;
+import com.example.wordle.repo.EquipoRepo;
 import com.example.wordle.repo.JuegoRepo;
 import com.example.wordle.repo.JugadorRepo;
 import com.example.wordle.repo.PartidaRepo;
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -24,6 +23,34 @@ public class PartidaService extends BaseService<Partida, Long, PartidaRepo> {
     private final PartidaRepo partidaRepo;
     private final JugadorRepo jugadorRepo;
     private final JuegoRepo juegoRepo;
+    public  List<Partida> findByJugador(Long id){
+        //compruebo si existe un jugador con ese id
+        Jugador jugador = jugadorRepo.findById(id).orElse(null);
+        if(jugador == null)
+            throw new JugadorNotFoundException(id);
+        return partidaRepo.findAllByJugador_IdJugadorOrderByPuntosDesc(id);
+    }
+    public  List<Partida> findByJuego(Long id){
+        //compruebo si existe un juego con ese id
+        Juego juego = juegoRepo.findById(id).orElse(null);
+        if(juego == null)
+            throw new JuegoNotFoundException(id);
+        return partidaRepo.findAllByJuego_IdJuego(id);
+    }
+    public  List<Partida> findByJuegoAndJugador(Long idJuego, Long idJugador){
+        //compruebo si existe un juego con ese id
+        Juego juego = juegoRepo.findById(idJuego).orElse(null);
+        if(juego == null)
+            throw new JuegoNotFoundException(idJuego);
+
+        //compruebo si existe un jugador con ese id
+        Jugador jugador = jugadorRepo.findById(idJugador).orElse(null);
+        if(jugador == null)
+            throw new JugadorNotFoundException(idJugador);
+
+        return partidaRepo.findAllByJuego_IdJuegoAndJugador_IdJugador(idJuego, idJugador);
+    }
+
 
     /**
      * Crea una nueva partida
@@ -46,7 +73,11 @@ public class PartidaService extends BaseService<Partida, Long, PartidaRepo> {
         partida.setPalabra(nueva.getPalabra());
         partida.setPuntos(calcularPuntos(nueva.getPalabra(), juego, nueva.getIntentos()));
 
-        
+        //actualizo los puntos del usuario y de su equipo
+        jugador.setPuntos(jugador.getPuntos() + partida.getPuntos());
+        Equipo equipo = jugador.getEquipo();
+        if(equipo != null)
+            equipo.setPuntos(equipo.getPuntos() + partida.getPuntos());
 
         return save(partida);
     }

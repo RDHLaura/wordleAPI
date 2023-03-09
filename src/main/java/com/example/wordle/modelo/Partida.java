@@ -1,10 +1,12 @@
 package com.example.wordle.modelo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -25,7 +27,9 @@ public class Partida {
     @JoinColumn(name = "Juego_idJuego")
     private Juego juego;
 
-    private Date datetime = new Date(); //TODO arreglar fecha
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy hh:mm:ss")
+    private LocalDateTime datetime = LocalDateTime.now();
+
     private int intentos;
     private String palabra;
     private int puntos;

@@ -3,9 +3,7 @@ package com.example.wordle.controller;
 import com.example.wordle.dto.CreatePartidaDTO;
 import com.example.wordle.dto.PartidaDTO;
 import com.example.wordle.dto.converter.DTOConverter;
-import com.example.wordle.error.JugadorNotFoundException;
 import com.example.wordle.error.PartidaNotFoundException;
-import com.example.wordle.modelo.Jugador;
 import com.example.wordle.modelo.Partida;
 import com.example.wordle.response.CustomResponse;
 import com.example.wordle.service.PartidaService;
@@ -17,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/*En este caso no se ha creado un método PUT para actualizar
+  la partida, ya que no tendría sentido modificar los datos de una partida ya jugada.*/
+
 @RestController
 @RequiredArgsConstructor
 public class PartidaController {
@@ -25,18 +26,31 @@ public class PartidaController {
 
     /**
      * Obtenemos todas las partidas
+     * @param idJuego
+     * @param idJugador
      * @return 404 si no hay partidas, 200 y lista de partidas si hay una o más
      */
     @GetMapping("/partida")
-    public ResponseEntity<?> getAllPartida() {
-        List <Partida> result = partidaService.findAll();
+    public ResponseEntity<?> getAllPartida(@RequestParam(required = false, name="idJugador") Long idJugador,
+                                           @RequestParam(required = false, name="idJuego") Long idJuego) {
+        List <Partida> result ;
+        if(idJugador == null && idJuego ==null)
+            result = partidaService.findAll();
+        else if (idJugador != null && idJuego !=null) {
+            result = partidaService.findByJuegoAndJugador(idJugador, idJuego);
+        } else if (idJugador != null) {
+            result = partidaService.findByJugador(idJugador);
+        }else{
+            result = partidaService.findByJuego(idJuego);
+        }
+
 
         if(result.isEmpty())
             throw new PartidaNotFoundException();
 
         List<PartidaDTO> dtoList = result.stream()
-                .map(dtoConverter::convertPartidaToDto)
-                .collect(Collectors.toList());
+                                        .map(dtoConverter::convertPartidaToDto)
+                                        .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtoList);
     }
@@ -63,7 +77,7 @@ public class PartidaController {
     public ResponseEntity<?> nuevaPartida(@RequestBody CreatePartidaDTO nueva){
         Partida saved = partidaService.nuevaPartida(nueva);
 
-        CustomResponse<Partida> response = new CustomResponse<>(HttpStatus.CREATED, "La partida se ha creado correctamente", saved);
+        CustomResponse<PartidaDTO> response = new CustomResponse<>(HttpStatus.CREATED, "La partida se ha creado correctamente", dtoConverter.convertPartidaToDto(saved));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -82,6 +96,4 @@ public class PartidaController {
         partidaService.delete(partida);
         return ResponseEntity.noContent().build();
   }
-
-
 }
