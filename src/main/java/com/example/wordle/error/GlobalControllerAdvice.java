@@ -32,6 +32,12 @@ public class GlobalControllerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
     }
 
+    @ExceptionHandler(PartidaNotFoundException.class)
+    public ResponseEntity<APIError> handlePartidaNotFound(PartidaNotFoundException exception){
+        APIError apiError = new APIError(HttpStatus.NOT_FOUND, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+    }
+
     @ExceptionHandler(SQLException.class)
     public ResponseEntity<Object> handleSQLError(SQLException exception, WebRequest request){
 

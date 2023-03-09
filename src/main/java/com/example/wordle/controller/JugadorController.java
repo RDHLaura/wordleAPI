@@ -6,7 +6,6 @@ import com.example.wordle.dto.UpdateJugadorDTO;
 import com.example.wordle.dto.converter.DTOConverter;
 import com.example.wordle.error.JugadorNotFoundException;
 import com.example.wordle.modelo.Jugador;
-import com.example.wordle.repo.EquipoRepo;
 import com.example.wordle.response.CustomResponse;
 import com.example.wordle.service.JugadorService;
 import lombok.RequiredArgsConstructor;
