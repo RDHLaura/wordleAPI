@@ -8,7 +8,7 @@ import lombok.Setter;
 public class UpdateJugadorDTO {
 
     private String  nombre;
-    private int     admin;
+    private Boolean admin;
     private String  clave;
     private String  avatar;
     private int     puntos;

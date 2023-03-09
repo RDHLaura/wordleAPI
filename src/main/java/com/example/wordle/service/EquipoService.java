@@ -2,10 +2,13 @@ package com.example.wordle.service;
 
 import com.example.wordle.dto.CreateEquipoDTO;
 import com.example.wordle.modelo.Equipo;
+import com.example.wordle.modelo.Juego;
 import com.example.wordle.repo.EquipoRepo;
 import com.example.wordle.service.base.BaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,10 +17,14 @@ public class EquipoService extends BaseService<Equipo, Long, EquipoRepo> {
     private final EquipoRepo equipoRepo;
 
     public Equipo nuevoEquipo(CreateEquipoDTO nuevoEquipo) {
-        Equipo equipo = new Equipo();
+        List<Equipo> existeEquipo = equipoRepo.findByNombreEqualsIgnoreCase(nuevoEquipo.getNombre());
+        if(!existeEquipo.isEmpty())
+            return  null;
 
+        Equipo equipo = new Equipo();
         equipo.setNombre( nuevoEquipo.getNombre());
         equipo.setLogo(nuevoEquipo.getLogo());
+
         return save(equipo);
     }
 

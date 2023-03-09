@@ -1,6 +1,10 @@
 package com.example.wordle.controller;
 
+import com.example.wordle.dto.CreateJuegoDTO;
+import com.example.wordle.dto.UpdateJuegoDTO;
+import com.example.wordle.error.JuegoNotFoundException;
 import com.example.wordle.modelo.Juego;
+import com.example.wordle.response.CustomResponse;
 import com.example.wordle.service.JuegoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,12 +24,12 @@ public class JuegoController {
      */
     @GetMapping("/juego")
     public ResponseEntity<?> getAllJuego() {
-
         List<Juego> result = juegoService.findAll();
 
-        return (result.isEmpty()) ?
-                ResponseEntity.noContent().build() :
-                ResponseEntity.ok(result);
+        if (result.isEmpty())
+            throw new JuegoNotFoundException();
+
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -38,21 +42,28 @@ public class JuegoController {
 
         Juego result = juegoService.findById(id).orElse(null);
 
-        return (result == null) ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+        if (result == null)
+            throw new JuegoNotFoundException(id);
+
+        return ResponseEntity.ok(result);
     }
 
     /**
      * Crea nuevo juego
      * @param nuevo datos del nuevo juego a crear
-     * @return 201 y el juego creado
+     * @return 201 y el juego creado ó 400 si ya existe un juego con el mismo nombre
      */
     @PostMapping("/juego")
-    public ResponseEntity<?> nuevoJuego(@RequestBody Juego nuevo) {
+    public ResponseEntity<?> nuevoJuego(@RequestBody CreateJuegoDTO nuevo) {
+         Juego saved = juegoService.nuevoJuego(nuevo);
 
-        Juego saved = juegoService.save(nuevo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        if(saved == null){
+            CustomResponse<Juego> error = new CustomResponse<>(HttpStatus.BAD_REQUEST, "Ya existe un juego con ese nombre.", null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        CustomResponse<Juego> response = new CustomResponse<>(HttpStatus.CREATED, "El juego se ha creado correctamente", saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -62,13 +73,17 @@ public class JuegoController {
      * @return 200 Ok si la edición tiene éxito, 404 si no encuentra el recurso
      */
     @PutMapping("/juego/{id}")
-    public ResponseEntity<?> editarJuego(@RequestBody Juego editar, @PathVariable Long id) {
+    public ResponseEntity<?> editarJuego(@RequestBody UpdateJuegoDTO editar, @PathVariable Long id) {
 
         Juego juegoActualizado = juegoService.actualizarJuego(editar, id);
 
-        return (juegoActualizado == null) ?
-            ResponseEntity.notFound().build() :
-            ResponseEntity.ok(juegoActualizado);
+        if(juegoActualizado == null){
+            CustomResponse<Juego> error = new CustomResponse<>(HttpStatus.BAD_REQUEST, "No existe un juego con el id "+ id, null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+        CustomResponse<Juego> response = new CustomResponse<>(HttpStatus.OK, "El juego se ha modificado correctamente", juegoActualizado);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
     }
 
     /**
@@ -81,7 +96,7 @@ public class JuegoController {
         Juego juego = juegoService.findById(id).orElse(null);
 
         if (juego == null)
-            return ResponseEntity.notFound().build();
+            throw new JuegoNotFoundException(id);
 
         juegoService.delete(juego);
         return ResponseEntity.noContent().build();

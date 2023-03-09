@@ -7,4 +7,5 @@ import lombok.Setter;
 public class CreateEquipoDTO {
     private String  nombre;
     private String  logo;
+    private Long idEquipo = null;
 }

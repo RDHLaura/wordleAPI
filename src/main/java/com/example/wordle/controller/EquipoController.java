@@ -1,7 +1,10 @@
 package com.example.wordle.controller;
 
 import com.example.wordle.dto.CreateEquipoDTO;
+import com.example.wordle.error.EquipoNotFoundException;
 import com.example.wordle.modelo.Equipo;
+import com.example.wordle.modelo.Juego;
+import com.example.wordle.response.CustomResponse;
 import com.example.wordle.service.EquipoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,9 +27,10 @@ public class EquipoController {
     public ResponseEntity<?> getAllEquipo(){
         List <Equipo> result = equipoService.findAll();
 
-        return (result.isEmpty()) ?
-            ResponseEntity.notFound().build() :
-            ResponseEntity.ok(result);
+        if(result.isEmpty())
+            throw new EquipoNotFoundException();
+
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -37,9 +41,10 @@ public class EquipoController {
     @GetMapping("/equipo/{id}")
     public ResponseEntity<?> getOneEquipo(@PathVariable Long id) {
         Equipo result = equipoService.findById(id).orElse(null);
-        return (result == null) ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+        if(result == null)
+            throw new EquipoNotFoundException(id);
+
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -49,9 +54,15 @@ public class EquipoController {
      */
     @PostMapping("/equipo")
     public ResponseEntity<?> nuevoEquipo(@RequestBody CreateEquipoDTO nuevo) {
-
         Equipo saved = equipoService.nuevoEquipo(nuevo);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+
+        if(saved == null){
+            CustomResponse<Equipo> error = new CustomResponse<>(HttpStatus.BAD_REQUEST, "Ya existe un equipo con ese nombre.", null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        CustomResponse<Equipo> response = new CustomResponse<>(HttpStatus.CREATED, "El equipo se ha creado correctamente", saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -65,23 +76,28 @@ public class EquipoController {
 
         Equipo equipoActualizado = equipoService.actualizarEquipo(editar, id);
 
-        return (equipoActualizado == null) ?
-             ResponseEntity.notFound().build():
-             ResponseEntity.ok(equipoActualizado);
+        if(equipoActualizado == null){
+            CustomResponse<Equipo> error = new CustomResponse<>(HttpStatus.BAD_REQUEST, "No existe un equipo con el id "+ id, null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+        CustomResponse<Equipo> response = new CustomResponse<>(HttpStatus.OK, "El equipo se ha modificado correctamente", equipoActualizado);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     /**
      * Borra un equipo
      * @param id del equipo a borrar
-     * @return Código 204 sin contenido o 404 si el equipo no existe
+     * @return Código 204 si se ha borrado correctamente o 404 si el equipo no existe
      */
     @DeleteMapping("/equipo/{id}")
     public ResponseEntity<?> borrarEquipo(@PathVariable Long id) {
         Equipo equipo = equipoService.findById(id).orElse(null);
         if (equipo == null)
-            return ResponseEntity.notFound().build();
+            throw new EquipoNotFoundException(id);
 
         equipoService.delete(equipo);
         return ResponseEntity.noContent().build();
     }
+
+
 }
