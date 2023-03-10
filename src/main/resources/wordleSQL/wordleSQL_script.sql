@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Equipo` (
   PRIMARY KEY (`idEquipo`),
   UNIQUE INDEX `idEquipo_UNIQUE` (`idEquipo` ASC) VISIBLE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 1
+AUTO_INCREMENT = 19
 DEFAULT CHARACTER SET = utf8mb3;
 
 
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Juego` (
   `intentosMax` INT NOT NULL,
   PRIMARY KEY (`idJuego`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 1
+AUTO_INCREMENT = 16
 DEFAULT CHARACTER SET = utf8mb3;
 
 
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Jugador` (
     REFERENCES `mydb`.`Equipo` (`idEquipo`)
     ON DELETE SET NULL)
 ENGINE = InnoDB
-AUTO_INCREMENT = 1
+AUTO_INCREMENT = 14
 DEFAULT CHARACTER SET = utf8mb3;
 
 
@@ -83,11 +83,14 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Partida` (
   INDEX `fk_Jugador_has_Juego_Jugador_idx` (`Jugador_idJugador` ASC) VISIBLE,
   CONSTRAINT `fk_Jugador_has_Juego_Juego1`
     FOREIGN KEY (`Juego_idJuego`)
-    REFERENCES `mydb`.`Juego` (`idJuego`),
+    REFERENCES `mydb`.`Juego` (`idJuego`)
+    ON DELETE CASCADE,
   CONSTRAINT `fk_Jugador_has_Juego_Jugador`
     FOREIGN KEY (`Jugador_idJugador`)
-    REFERENCES `mydb`.`Jugador` (`idJugador`))
+    REFERENCES `mydb`.`Jugador` (`idJugador`)
+    ON DELETE CASCADE)
 ENGINE = InnoDB
+AUTO_INCREMENT = 16
 DEFAULT CHARACTER SET = utf8mb3;
 
 
